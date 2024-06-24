@@ -1,48 +1,66 @@
 import './App.css';
-import React, {useState} from 'react';
-import {marked} from 'marked'
+import React, { useState, useEffect } from 'react';
+import { marked } from 'marked';
+
+const STORAGE_KEY = 'markdown-content'; // Key for local storage
+
+const useLocalStorage = (initialValue) => {
+  // Get from local storage then parse stored json or return initial value
+  const [value, setValue] = useState(() => {
+    try {
+      const item = localStorage.getItem(STORAGE_KEY);
+      return item ? JSON.parse(item) : initialValue;
+    } catch (error) {
+      // If error parsing JSON, return initial value
+      return initialValue;
+    }
+  });
+
+  // useEffect to store changes in local storage
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(value));
+  }, [value]);
+
+  return [value, setValue];
+};
 
 const App = () => {
-  const [code, setCode] = useState('## Hello')
-  const [compiled, setCompiled] = useState('<h2 id="hello">Hello</h2>')
-  const [hide, hidePreview] = useState(true)
-
-  const openMD = () => {
-    console.log(0)
-    hidePreview(true)
-  }
-
-  const openPreview = () => {
-    console.log(0)
-    hidePreview(false)
-  }
+  const [code, setCode] = useLocalStorage('## Hello');
+  const [compiled, setCompiled] = useState(marked.parse(code));
+  const [hide, hidePreview] = useState(true);
 
   const handleChange = (e) => {
-    setCode(e.target.value)
-    setCompiled(marked.parse(e.target.value))
-  }
+    setCode(e.target.value);
+    setCompiled(marked.parse(e.target.value));
+  };
 
   return (
     <>
       <h1>MarkDown Previewer React App</h1>
       <div className="container">
         <div className="btns">
-          <button onClick={openMD} className="btn">MarkDown</button>
-          <button onClick={openPreview}>Preview</button>
+          <button onClick={() => hidePreview(true)} className="btn">
+            MarkDown
+          </button>
+          <button onClick={() => hidePreview(false)} className="btn">
+            Preview
+          </button>
+
+          <button disabled className="btn">Docs (API integration coming soon)</button>
+
         </div>
-        {
-        hide ? 
+        {hide ? (
           <div>
-            <textarea onChange={handleChange} value={code}/>
-          </div> : 
-          <div>
-            <textarea value={compiled}/>
+            <textarea onChange={handleChange} value={code} />
           </div>
-        }
+        ) : (
+          <div>
+            <textarea value={compiled} />
+          </div>
+        )}
       </div>
     </>
-  )
-}
-
+  );
+};
 
 export default App;
